@@ -57,7 +57,7 @@ QR-ссылка открывает демонстрационную карточ
 ```bash
 npm --prefix frontend ci
 npm --prefix frontend run build:portfolio
-npm --prefix frontend exec vite preview --host 127.0.0.1
+npm --prefix frontend exec -- vite preview frontend --host 127.0.0.1
 ```
 
 Для разработки самостоятельного демо:
