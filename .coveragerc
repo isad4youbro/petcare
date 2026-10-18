@@ -1,0 +1,13 @@
+[run]
+source = backend
+omit = backend/test_*.py
+branch = True
+
+[report]
+show_missing = True
+
+[xml]
+output = test-results/coverage.xml
+
+[html]
+directory = test-results/coverage-html

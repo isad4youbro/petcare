@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Интерактивная документация HTTP API PetCare">
+  <title>PetCare — Swagger API</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+  <style>
+    body { margin: 0; background: #f8f5ec; color: #253323; font-family: system-ui, sans-serif; }
+    .doc-nav { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; padding: 1rem max(1rem, calc((100vw - 1180px)/2)); background: #244432; color: white; }
+    .doc-nav strong { font-size: 1.15rem; margin-right: auto; }
+    .doc-nav a { color: white; text-decoration: underline; text-underline-offset: 3px; }
+    .doc-note { max-width: 1160px; margin: 1rem auto 0; padding: 0 1rem; line-height: 1.5; }
+    .doc-note code { background: #e9eadf; padding: .1rem .3rem; border-radius: 4px; }
+    .swagger-ui .topbar { display: none; }
+  </style>
+</head>
+<body>
+  <nav class="doc-nav" aria-label="Документация"><strong>🐾 PetCare API</strong><a href="/">Приложение</a><a href="/rfc">RFC проекта</a><a href="/openapi.json" download="petcare-openapi.json">Скачать OpenAPI JSON</a></nav>
+  <p class="doc-note">API работает на этом же домене. Для пробной сессии нажмите «Попробовать без регистрации» в приложении, затем передайте её токен через <b>Authorize → DemoToken</b>. Для постоянного аккаунта браузер отправляет сессионную cookie сам. Интерактивные запросы изменяют данные вашей сессии.</p>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin="anonymous"></script>
+  <script src="/swagger-init.js"></script>
+</body>
+</html>

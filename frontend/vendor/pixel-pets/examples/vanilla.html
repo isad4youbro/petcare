@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PetSprite — пример</title>
+<style>
+  body{margin:0;padding:24px 16px;background:#1b1730;color:#ead4aa;font:16px/1.4 system-ui,sans-serif}
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+  canvas{width:96px;height:96px;background:#141126;border:3px solid #181425}
+  button{font:inherit;padding:8px 12px}
+</style>
+</head>
+<body>
+<!-- Запуск: npx serve . (из корня пакета) и откройте /examples/vanilla.html -->
+<h1>PetSprite без фреймворка</h1>
+<div class="row" id="pets"></div>
+<p><button id="ears">Сменить уши у кота</button></p>
+<script type="module">
+  import { createConfig } from '../src/index.js';
+  import { PetSprite } from '../src/sprite.js';
+
+  const pets = [
+    ['cat_domestic','walk'], ['dog_corgi','walk'], ['budgie','stand'], ['croc','sit'], ['horse','walk'], ['betta','walk']
+  ].map(([id, pose]) => {
+    const cv = document.createElement('canvas'); document.getElementById('pets').append(cv);
+    return new PetSprite(cv, createConfig(id, 0, { neck: 'collar' }), { pose });
+  });
+
+  // Изменение с подсветкой изменившихся пикселей (как в конструкторе)
+  document.getElementById('ears').onclick = () => {
+    const cat = pets[0], ears = ['cat','catSmall','catBig','tuft','fold'];
+    const cur = cat.config.parts.ears || 'cat', next = ears[(ears.indexOf(cur) + 1) % ears.length];
+    cat.setConfig({ ...cat.config, parts: { ...cat.config.parts, ears: next } }, { flash: true });
+  };
+</script>
+</body>
+</html>

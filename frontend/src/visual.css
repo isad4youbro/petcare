@@ -1,0 +1,163 @@
+/* Detailed 8 × 16 pixel letters keep Cyrillic readable in compact controls. */
+.portfolio-note { margin: 0 0 20px; font: 16px/1.5 var(--font-body); color: var(--muted-foreground); }
+@font-face { font-family: 'Tiny5'; src: url('../public/assets/fonts/tiny5.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'PetCare Mono'; src: url('../public/assets/fonts/ibm-plex-mono.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'PetCare UI Pixel'; src: url('../public/assets/fonts/unifont.otf') format('opentype'); font-weight: 400; font-style: normal; font-display: swap; }
+:root { --font-body: 'PetCare UI Pixel', 'PetCare Mono', monospace; --font-display: 'PetCare UI Pixel', 'PetCare Mono', monospace; }
+body, input, textarea, select, label, .record-row, .field { font-family: var(--font-body) !important; }
+body { font-size: 18px; line-height: 1.6; }
+h1, h2, h3, .dialog-title, .main-nav button, .line-tabs button, .toolbar-section { font-family: var(--font-display) !important; font-weight: 600 !important; letter-spacing: 0 !important; }
+h1 { font-size: 40px; line-height: 1.25; }
+h2 { font-size: 30px; line-height: 1.2; }
+h3 { font-size: 25px; line-height: 1.2; }
+.main-nav button, .line-tabs button, .toolbar-section { font-size: 21px !important; }
+button[data-slot='button'] { font-family: var(--font-display) !important; font-size: 21px; font-weight: 600; min-height: 44px; line-height: 1.15; }
+input[data-slot], textarea[data-slot], select[data-slot], button[data-slot], .line-tabs button { border-radius: 0 !important; }
+input[data-slot], textarea[data-slot], select[data-slot] { min-height: 46px; font-size: 18px !important; }
+:where(main, section, article, form, .dialog-content, .pet-card, .field) { min-width: 0; }
+:where(p, h1, h2, h3, label, a, .record-row) { overflow-wrap: anywhere; }
+:where(input, textarea, select, img, canvas) { max-width: 100%; }
+
+/* Accessible Radix menus use the same stepped frame as the buttons. */
+.pixel-select-trigger { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-width: 0; text-align: left; }
+.pixel-select-trigger > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pixel-select-menu { z-index: 100; min-width: var(--radix-select-trigger-width); max-width: calc(100vw - 20px); max-height: min(360px, var(--radix-select-content-available-height)); background: var(--popover, var(--card)); color: var(--foreground); border: 8px solid transparent; border-image: var(--welcome-edge) 8 stretch; box-shadow: 4px 4px 0 var(--panel-shade); font-family: var(--font-body); }
+.pixel-select-viewport { padding: 4px; }
+.pixel-select-option { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 10px 12px; font-size: 14px; cursor: pointer; outline: none; overflow-wrap: anywhere; }
+.pixel-select-option[data-highlighted] { background: var(--accent); box-shadow: inset 3px 0 0 var(--primary); }
+.pixel-select-option[data-disabled] { opacity: .45; cursor: default; }
+.pixel-select-label { padding: 8px 12px; color: var(--muted-foreground); font-size: 12px; }
+.pixel-select-scroll { text-align: center; padding: 5px; background: var(--card); }
+
+/* Welcome screen: one useful example, then the sign-in form. */
+.auth-page .auth-main { width: min(1180px, 100%); margin: auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); gap: clamp(40px, 7vw, 100px); align-items: center; padding: 32px 24px 48px; }
+.auth-page .auth-intro { min-width: 0; }
+.auth-page .auth-form-section { width: 100%; min-width: 0; }
+.auth-page .auth-form-section h2 { font-size: 34px; }
+.auth-page .welcome-eyebrow { margin: 0 0 14px; font-family: var(--font-body); font-size: 12px; color: var(--muted-foreground); }
+.auth-page .welcome-story h1 { margin: 0; font-size: clamp(42px, 4vw, 58px); line-height: 1; }
+.auth-page .welcome-description { margin: 20px 0 26px; font-size: 14px; line-height: 1.7; color: var(--muted-foreground); }
+.welcome-window { max-width: 480px; background: var(--card); border: 8px solid transparent; border-image: var(--welcome-edge) 8 stretch; box-shadow: 4px 4px 0 var(--panel-shade); }
+.welcome-window-bar { display: flex; justify-content: space-between; gap: 10px; padding: 9px 12px; border-bottom: 2px solid var(--panel-edge); font-size: 12px; }
+.welcome-window-bar span:last-child { letter-spacing: 3px; color: var(--muted-foreground); font-size: 8px; }
+.welcome-pet-stage { min-height: 130px; padding: 12px 18px; display: flex; align-items: center; gap: 26px; background: var(--muted); border-bottom: 2px solid var(--panel-edge); }
+.welcome-pet-stage .pet-avatar { flex: 0 0 96px; }
+.welcome-pet-name { font-family: var(--font-display); font-size: 36px; }
+.welcome-record { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 14px; padding: 14px 12px; }
+.welcome-record + .welcome-record { border-top: 1px solid var(--border); }
+.welcome-record-label { font-size: 11px; color: var(--muted-foreground); }
+.welcome-record strong { font-size: 12px; font-weight: 600; }
+.welcome-record p { font-size: 11px; line-height: 1.6; color: var(--muted-foreground); margin: 5px 0 0; }
+.welcome-pet-tabs { display: flex; gap: 8px; max-width: 480px; margin-top: 18px; }
+.welcome-pet-tabs button { display: flex; flex: 1; min-width: 0; align-items: center; justify-content: center; gap: 4px; min-height: 48px; padding: 4px 8px; border: 2px solid transparent; border-radius: 0 !important; font: 18px var(--font-display); }
+.welcome-pet-tabs button[aria-pressed='true'] { border-color: var(--panel-edge); background: var(--muted); }
+.welcome-pet-tabs button:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.welcome-pet-tabs .pet-avatar { width: 40px; height: 40px; overflow: hidden; flex: 0 0 40px; }
+.welcome-pet-tabs .pet-avatar canvas, .welcome-pet-tabs .pet-avatar img { width: 40px !important; height: 40px !important; }
+.welcome-pet-tabs .pet-initial { display: none; }
+@media (max-width: 1023px) { .auth-page .auth-main { gap: 32px; padding-inline: 20px; grid-template-columns: minmax(0, 1fr) minmax(320px, 390px); } .welcome-record { grid-template-columns: 1fr; gap: 4px; } .welcome-pet-tabs button { padding: 4px; } }
+@media (max-width: 759px) {
+  .auth-page .auth-main { display: flex; flex-direction: column; gap: 24px; padding: 16px 16px 36px; }
+  .auth-page .auth-intro, .auth-page .auth-form-section { width: 100%; max-width: 460px; }
+  .auth-page .welcome-story h1 { font-size: 38px; line-height: 1.05; }
+  .auth-page .welcome-eyebrow { display: none; }
+  .auth-page .welcome-description { margin: 12px 0; font-size: 13px; }
+  .welcome-window { display: none; }
+  .welcome-pet-tabs { margin-top: 12px; }
+  .auth-page .auth-form-section h2 { font-size: 30px; }
+  input[data-slot], textarea[data-slot], select[data-slot] { font-size: 16px !important; }
+  h1 { font-size: 34px; } h2 { font-size: 27px; }
+  .main-nav button { font-size: 20px !important; }
+  .mobile-nav span { font-family: var(--font-display); font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .welcome-story *, .pixel-select-menu { animation: none !important; transition: none !important; } }
+
+/* Long action labels must wrap inside narrow phone forms. */
+.auth-page button { max-width:100%; min-width:0; white-space:normal; overflow-wrap:anywhere; }
+.auth-page .auth-form-section { box-sizing:border-box; }
+
+/* Constructor controls share the stepped frame and a stable touch target. */
+.animal-selection, .animal-groups button, .animal-results button, .preview-poses button, .constructor-tabs button, .color-slots button {
+  border-radius:0 !important; border:6px solid transparent !important;
+  border-image:var(--welcome-edge) 8 stretch !important; background:var(--card);
+  min-height:44px; font-family:var(--font-display) !important; font-size:19px;
+}
+.animal-selection { width:100%; min-width:0; }
+.animal-selection > span { min-width:0; overflow-wrap:anywhere; }
+.animal-selection[aria-expanded='true'] > svg { transform:rotate(180deg); }
+.animal-collapse { align-self:flex-end; margin:0 0 8px auto; }
+.preview-poses, .constructor-tabs, .color-slots { display:flex; flex-wrap:wrap; gap:8px; }
+.preview-poses button[aria-pressed='true'], .constructor-tabs button[aria-pressed='true'], .animal-results button[aria-pressed='true'] { background:var(--accent); color:var(--accent-foreground); box-shadow:inset 0 -3px 0 var(--primary); }
+.editor-pet-emotion { width:96px; height:96px; position:relative; margin:0 auto; }
+.editor-pet-emotion.is-happy .pet-avatar { transform-origin:center bottom; animation:pet-joy .8s ease-in-out infinite alternate; }
+.editor-pet-emotion.is-happy::after { content:''; position:absolute; width:18px; height:16px; right:-8px; top:0; background:#ce6765; clip-path:polygon(0 12%,12% 12%,12% 0,38% 0,38% 12%,50% 25%,62% 12%,62% 0,88% 0,88% 12%,100% 12%,100% 50%,88% 50%,88% 62%,75% 62%,75% 75%,62% 75%,62% 88%,50% 100%,38% 88%,38% 75%,25% 75%,25% 62%,12% 62%,12% 50%,0 50%); }
+@keyframes pet-joy { from { transform:rotate(-4deg); } to { transform:rotate(4deg); } }
+.telegram-open-bot { width:100%; margin:8px 0 14px; }
+@media(max-width:759px) { .preview-poses button { flex:1 1 75px; } .animal-groups { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+@media(prefers-reduced-motion:reduce) { .editor-pet-emotion.is-happy .pet-avatar { animation:none; } }
+
+.auth-page .welcome-story { display:block !important; width:100%; min-width:0; }
+.auth-page .welcome-pet-tabs { display:flex !important; width:100%; max-width:100%; }
+.auth-page .welcome-pet-tabs button { flex:1 1 0; flex-direction:column; gap:2px; }
+.auth-page .welcome-pet-tabs button > span:last-child { white-space:nowrap; font-size:18px; }
+@media(max-width:759px) { .auth-page .welcome-story h1 { font-size:34px; } }
+
+/* Shared pixel frames for every application overlay. */
+[data-slot=dialog-content], [data-slot=sheet-content], [data-slot=popover-content], .guide-popover, .notifications-panel, .food-suggestions, .pixel-select-menu, .theme-menu {
+  border:8px solid transparent !important; border-image:var(--welcome-edge) 8 stretch !important;
+    border-radius:0 !important; clip-path:none !important; background-color:var(--card);
+      color:var(--foreground); box-shadow:4px 4px 0 var(--panel-shade) !important;
+      }
+      [data-slot=dialog-content] { max-width:min(960px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow-y:auto; }
+      [data-slot=popover-content], .pixel-select-menu, .food-suggestions { max-width:calc(100vw - 24px); }
+      button[data-slot=native-select] { border:6px solid transparent !important; border-image:var(--welcome-edge) 8 stretch !important; padding:8px 12px !important; min-height:46px; background:var(--card); }
+      .pixel-select-option[data-state=checked] { background:var(--muted); box-shadow:inset 3px 0 0 var(--primary); }
+      .food-suggestions > button { border-radius:0 !important; min-height:44px; }
+      .animal-selection > svg { transition:transform .15s ease; flex-shrink:0; }
+      .animal-choice-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; }
+      .animal-choice-heading span { font:18px var(--font-display); }
+      /* Only the small pet accepts pointer input; the page remains scrollable. */
+      .pet-companion-layer { position:fixed; inset:0; z-index:24; pointer-events:none; overflow:hidden; }
+      .pet-companion { position:absolute; top:0; left:0; display:block; width:72px; height:72px; min-width:0; min-height:0; padding:0; margin:0; border:0 !important; border-radius:0 !important; background:none !important; box-shadow:none !important; pointer-events:auto; touch-action:none; user-select:none; cursor:grab; will-change:transform; }
+      .pet-companion[data-state^=held] { cursor:grabbing; }
+      .pet-companion:focus-visible { outline:2px dashed var(--foreground); outline-offset:-2px; }
+      .pet-companion-sprite { display:block; width:72px; height:72px; }
+      .pet-companion .pet-avatar { display:block; width:72px !important; height:72px !important; }
+      .pet-companion canvas, .pet-companion img { width:72px !important; height:72px !important; pointer-events:none; }
+      .pet-companion-zzz { position:absolute; right:0; top:0; font:18px var(--font-display); color:var(--foreground); }
+      @media(max-width:759px) { [data-slot=sheet-content] { max-width:calc(100vw - 16px); } [data-slot=dialog-content] { padding:18px; } }
+
+.animal-selection > span > small { display:block; margin-top:4px; color:var(--muted-foreground); font:12px var(--font-body); }
+
+/* Keep the search illustration beside the action, without an empty stage. */
+.search-page .question-form { display: grid; grid-template-columns: minmax(0,1fr) 48px auto; align-items: center; gap: 12px; }
+.search-page .search-emblem { width: 48px; height: 48px; object-fit: contain; image-rendering: pixelated; }
+.search-page .search-placeholder { padding: 12px 0 0; max-width: none; }
+.search-page .search-placeholder p { margin: 0; }
+@media (max-width:759px) {
+  .search-page .question-form { grid-template-columns: minmax(0,1fr) auto; gap: 10px; }
+  .search-page .question-form input { grid-column: 1 / -1; min-width: 0 !important; width: 100%; }
+  .search-page .search-emblem { grid-column: 1; }
+  .search-page .question-form [data-slot='button'] { grid-column: 2; margin: 0; }
+}
+
+
+/* Use the detailed pixel face for compact text; reserve large display shapes for h1. */
+h2, h3, .dialog-title, .main-nav button, .line-tabs button, .toolbar-section, strong { font-family: var(--font-body) !important; letter-spacing: 0 !important; }
+h2 { font-size: 28px; line-height: 1.35; }
+h3 { font-size: 24px; line-height: 1.35; }
+.main-nav button, .line-tabs button, .toolbar-section { font-size: 18px !important; line-height: 1.5; }
+button[data-slot="button"] { font-family: var(--font-body) !important; font-size: 18px; line-height: 1.5; }
+@media (max-width: 759px) {
+  .mobile-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding-inline: 4px; }
+  .mobile-nav button { width: 100%; min-width: 0; max-width: 100%; padding-inline: 0; border: 0; gap: 5px; }
+  .mobile-nav span { display: block; width: 100%; min-width: 0; font-family: var(--font-body) !important; font-size: 16px; line-height: 1.4; letter-spacing: 0; white-space: nowrap; text-align: center; }
+}
+
+button[data-slot="native-select"], .animal-selection, .animal-choice-heading span { font-family: var(--font-body) !important; font-size: 18px !important; line-height: 1.5; }
+
+/* Readable details and controls keep the same scale on touch screens. */
+.field-hint, .field-error, .record-meta, .pet-card p, .pet-card small, .pixel-select-label, .animal-selection > span > small { font-size:16px; line-height:1.5; }
+.pixel-select-option { font-size:18px; line-height:1.5; }
+input[data-slot], textarea[data-slot], select[data-slot] { font-size:18px !important; }
+@media(max-width:759px) { .page-header h1, .page-title, h1 { font-size:34px; } }

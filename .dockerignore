@@ -1,0 +1,17 @@
+.git
+.env
+**/.env
+**/__pycache__
+**/node_modules
+backend/data
+frontend/dist
+frontend/.archive
+frontend/public/assets/pets
+frontend/preview
+test-results
+.coverage
+*.log
+*.zip
+*.sha256
+
+deploy/petcare.env

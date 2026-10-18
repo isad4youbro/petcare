@@ -1,0 +1,32 @@
+services:
+  app:
+    image: petcare:local
+    build:
+      context: ..
+      dockerfile: Dockerfile.runtime
+    restart: unless-stopped
+    env_file: ./petcare.env
+    environment:
+      PETCARE_HOST: 0.0.0.0
+      PORT: 8000
+      PETCARE_SECURE_COOKIES: '1'
+      PETCARE_TRUST_PROXY: '1'
+    volumes:
+      - petcare_data:/app/backend/data
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      PETCARE_DOMAIN: ${PETCARE_DOMAIN:?Set the public domain}
+    ports:
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+volumes:
+  petcare_data:
+  caddy_data:
+  caddy_config:

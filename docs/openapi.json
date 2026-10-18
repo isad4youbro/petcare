@@ -1,0 +1,1875 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PetCare HTTP API",
+    "version": "0.2.0",
+    "description": "PetCare — API того же домена для React, публичной QR-карточки и Telegram worker. Основной вход: POST /api/register или /api/login → HttpOnly cookie → GET /api/state. Для демо: POST /api/demo → X-PetCare-Demo. Время расписаний — Москва UTC+3. Ошибки возвращаются JSON-объектом {error: текст}; пользовательские данные проверяются на сервере. Swagger Try it out может менять данные текущего аккаунта. Не вводите чужие секреты."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Текущий домен PetCare"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Система",
+      "description": "Состояние сервера"
+    },
+    {
+      "name": "Вход",
+      "description": "Уникальный логин, пароль и отдельная гостевая копия"
+    },
+    {
+      "name": "Питомцы",
+      "description": "Карточки владельца"
+    },
+    {
+      "name": "Записи",
+      "description": "Медкарта, питание, напоминания"
+    },
+    {
+      "name": "Календарь",
+      "description": "Экспорт событий"
+    },
+    {
+      "name": "Поиск",
+      "description": "Поиск по записям"
+    },
+    {
+      "name": "QR-метки",
+      "description": "Публичная карточка и настройки"
+    },
+    {
+      "name": "Telegram",
+      "description": "Связь аккаунта сайта с ботом и проверка реальной доставки"
+    },
+    {
+      "name": "Web Push",
+      "description": "Опциональный канал, требует отдельного включения на сервере"
+    },
+    {
+      "name": "Совместимость",
+      "description": "Старые email OTP-маршруты, текущим интерфейсом не используются"
+    }
+  ],
+  "security": [
+    {
+      "SessionCookie": []
+    },
+    {
+      "DemoToken": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "petcare_session",
+        "description": "HttpOnly cookie постоянной сессии. Браузер отправляет её автоматически после входа."
+      },
+      "DemoToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-PetCare-Demo",
+        "description": "Токен из POST /api/demo, действует 24 часа."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "Ok": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "Pet": {
+        "type": "object",
+        "required": [
+          "name",
+          "species"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "species": {
+            "type": "string"
+          },
+          "breed": {
+            "type": "string"
+          },
+          "birthday": {
+            "type": "string",
+            "format": "date"
+          },
+          "weight": {
+            "oneOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "photo": {
+            "type": "string",
+            "description": "Data URL JPEG/PNG/WebP"
+          },
+          "avatar": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Record"
+            },
+            "readOnly": true
+          }
+        }
+      },
+      "Record": {
+        "type": "object",
+        "required": [
+          "petId",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "petId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "health",
+              "food",
+              "reminder"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "brand": {
+            "type": "string"
+          },
+          "flavor": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "example": "10:00"
+          },
+          "done": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      },
+      "State": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "pets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Pet"
+            }
+          },
+          "telegram": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "ai": {
+            "type": "boolean"
+          },
+          "today": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Система"
+        ],
+        "summary": "Проверить доступность API и SQLite",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "service": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "description": "Публичная проверка процесса и чтения SQLite. Не создаёт сессию и не проверяет внешние сервисы; ok=true не означает доступность Telegram."
+      }
+    },
+    "/api/auth/request-code": {
+      "post": {
+        "tags": [
+          "Совместимость"
+        ],
+        "summary": "Запросить одноразовый код",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "challengeId": {
+                      "type": "string",
+                      "description": ""
+                    },
+                    "expiresIn": {
+                      "type": "integer"
+                    },
+                    "resendAfter": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Совместимый старый вход по почтовому коду. Текущая форма использует логин/пароль. Требует SMTP; секретный код в JSON-ответе не возвращается.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "register",
+                      "login"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Обязательно при регистрации"
+                  }
+                },
+                "required": [
+                  "email",
+                  "mode"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [],
+        "deprecated": true
+      }
+    },
+    "/api/auth/verify-code": {
+      "post": {
+        "tags": [
+          "Совместимость"
+        ],
+        "summary": "Подтвердить код и установить cookie",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Совместимый старый маршрут подтверждения email-кода. При успехе устанавливает HttpOnly cookie. Не нужен для обычного входа по логину/паролю.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "challengeId": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[0-9]{6}$"
+                  }
+                },
+                "required": [
+                  "challengeId",
+                  "code"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": [],
+        "deprecated": true
+      }
+    },
+    "/api/demo": {
+      "post": {
+        "tags": [
+          "Вход"
+        ],
+        "summary": "Создать гостевую копию",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "demoToken": {
+                      "type": "string",
+                      "description": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Создаёт отдельного гостевого владельца и шесть заполненных питомцев. Возвращает токен для заголовка X-PetCare-Demo; срок 24 часа. Это независимая копия, а не общая изменяемая база демо для всех посетителей.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "tags": [
+          "Вход"
+        ],
+        "summary": "Завершить текущую сессию",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "description": "Удаляет текущую серверную сессию и очищает cookie. Записи постоянного аккаунта сохраняются. Демо-токен фронтенд удаляет из sessionStorage."
+      }
+    },
+    "/api/onboard": {
+      "post": {
+        "tags": [
+          "Вход"
+        ],
+        "summary": "Отметить прохождение знакомства",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "description": "Отмечает знакомство с интерфейсом завершённым у текущего владельца. Нужна активная сессия или токен демо."
+      }
+    },
+    "/api/state": {
+      "get": {
+        "tags": [
+          "Питомцы"
+        ],
+        "summary": "Получить профиль, питомцев и записи",
+        "responses": {
+          "200": {
+            "description": "Текущий владелец и только его данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/State"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Главная загрузка кабинета. Возвращает текущего владельца, его питомцев с записями и состояние Telegram. Чужие данные не включаются. Без сессии — 401; эта ошибка открывает форму входа, а не создаёт аккаунт автоматически."
+      }
+    },
+    "/api/pets/save": {
+      "post": {
+        "tags": [
+          "Питомцы"
+        ],
+        "summary": "Создать или обновить своего питомца",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Создаёт питомца или обновляет питомца с переданным id. Сервер валидирует имя, дату рождения, вес, фото и конфигурацию аватара. Ответ содержит id. Обновление чужого id возвращает 404. При создании не передавайте id.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Pet"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pets/delete": {
+      "post": {
+        "tags": [
+          "Питомцы"
+        ],
+        "summary": "Удалить своего питомца и записи",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "petId": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "petId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "description": "Удаляет своего питомца вместе с его записями и публичной меткой. Передайте petId. Требует подтверждения в интерфейсе; действие необратимое. Чужой питомец — 404."
+      }
+    },
+    "/api/records/save": {
+      "post": {
+        "tags": [
+          "Записи"
+        ],
+        "summary": "Создать или обновить запись",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Сохраняет запись своего питомца: kind=health (визиты, вакцинации, обработки, препараты, измерения), food (корм и реакции) или reminder (событие). petId обязателен; id нужен только для обновления. Расписание препаратов и интервалы процедур создают связанные напоминания. Поля и единицы указаны в API.md; ошибки данных — 400, чужой питомец/запись — 404.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Record"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/records/delete": {
+      "post": {
+        "tags": [
+          "Записи"
+        ],
+        "summary": "Удалить свою запись",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "petId": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "id": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "petId",
+                  "id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "description": "Удаляет запись текущего владельца. Передайте petId и id записи. При удалении назначения убираются связанные невыполненные напоминания; выполненная история сохраняется по правилам курса."
+      }
+    },
+    "/api/food/suggest": {
+      "get": {
+        "tags": [
+          "Записи"
+        ],
+        "summary": "Подсказать марки корма",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "description": ""
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Возвращает подходящие названия кормов для автодополнения. Это подсказки ввода, а не медицинские рекомендации и не каталог магазина."
+      }
+    },
+    "/api/calendar.ics": {
+      "get": {
+        "tags": [
+          "Календарь"
+        ],
+        "summary": "Выгрузить напоминания в календарь",
+        "responses": {
+          "200": {
+            "description": "Файл ICS для импорта",
+            "content": {
+              "text/calendar": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Возвращает текстовый файл iCalendar с невыполненными напоминаниями владельца. Время событий рассчитывается в Москве UTC+3. Импорт в телефон выполняет пользователь; постоянной двусторонней синхронизации нет.",
+        "parameters": [
+          {
+            "name": "petId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/search": {
+      "post": {
+        "tags": [
+          "Поиск"
+        ],
+        "summary": "Найти ответ в записях питомца",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "answer": {
+                      "type": "string",
+                      "description": ""
+                    },
+                    "mode": {
+                      "type": "string",
+                      "description": ""
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "petId": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "question": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "petId",
+                  "question"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "description": "Передайте petId и question. Поиск использует только дневник выбранного питомца и возвращает answer, mode и sources. По умолчанию работает локально; при настроенном внешнем LLM ожидание ограничено 8 секундами, при ошибке возвращается локальный ответ. Лечение не назначается."
+      }
+    },
+    "/api/tags/public/{token}": {
+      "get": {
+        "tags": [
+          "QR-метки"
+        ],
+        "summary": "Получить публичную карточку метки",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [],
+        "description": "Публичная карточка по непрогнозируемому токену, регистрация не нужна. Возвращает только разрешённые владельцем данные и состояние метки. Закрытая медкарта, вес и все записи автоматически не публикуются. Полный адрес включается только с разрешения владельца."
+      }
+    },
+    "/api/tags/public/{token}/scan": {
+      "post": {
+        "tags": [
+          "QR-метки"
+        ],
+        "summary": "Зарегистрировать открытие карточки",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [],
+        "description": "Записывает факт открытия метки и ставит отдельное уведомление в очередь владельца. Открытие не означает, что животное найдено. Координаты этим запросом не собираются."
+      }
+    },
+    "/api/tags/public/{token}/report": {
+      "post": {
+        "tags": [
+          "QR-метки"
+        ],
+        "summary": "Сообщить владельцу о питомце",
+        "responses": {
+          "200": {
+            "description": "Сообщение сохранено, уведомление поставлено в очередь",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "situation": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "place": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "requestId": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "situation",
+                  "place",
+                  "requestId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [],
+        "description": "Публичная форма нашедшего. Сохраняет ситуацию, место, время и добровольно переданные контакты, комментарий, фото. Координаты принимаются только вместе с shareLocation=true. Фото передаётся как JPEG/PNG/WebP data URL; клиент уменьшает исходник, включая HEIC. requestId защищает от повторного сохранения одного сообщения. Успех означает запись в SQLite, а не прочтение владельцем. Отчёт виден в управлении меткой; Telegram уходит только в привязанный чат владельца именно этой метки."
+      }
+    },
+    "/api/tags/manage/{petId}": {
+      "get": {
+        "tags": [
+          "QR-метки"
+        ],
+        "summary": "Получить настройки и сообщения своей метки",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "petId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Возвращает настройки публичной метки и сохранённые открытия/сообщения для своего питомца. Требует сессию; не является публичной выдачей персональных данных. Здесь владелец видит фото нашедшего."
+      }
+    },
+    "/api/tags/save": {
+      "post": {
+        "tags": [
+          "QR-метки"
+        ],
+        "summary": "Обновить публичную карточку",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "description": "Поля карточки описаны в docs/API.md; показывайте только данные, разрешённые владельцем.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "petId": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "petId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "description": "Сохраняет настройки метки своего питомца: публикация, статус пропажи, контакты, адрес и правила обращения. Точные закрытые записи дневника не копируются автоматически. Ответ содержит токен публичной ссылки."
+      }
+    },
+    "/api/telegram/link": {
+      "post": {
+        "tags": [
+          "Telegram"
+        ],
+        "summary": "Получить ссылку привязки Telegram",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Бот не настроен или Telegram недоступен с сервера"
+          }
+        },
+        "description": "Создаёт одноразовый start-код на 10 минут для текущего аккаунта, включая активное демо сайта. Возвращает URL бота. Привязка появится только после получения backend-команды /start с этим кодом. Обычная ссылка t.me сама аккаунт не связывает. Если сервер не узнал имя бота из Telegram, возвращает 503.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telegram/unlink": {
+      "post": {
+        "tags": [
+          "Telegram"
+        ],
+        "summary": "Отвязать Telegram",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Удаляет chat_id и незавершённый код привязки у текущего владельца. Дневник и аккаунт сохраняются. Бот больше не получает его уведомления.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/telegram/test": {
+      "post": {
+        "tags": [
+          "Telegram"
+        ],
+        "summary": "Отправить тестовое сообщение",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Пытается отправить реальное сообщение в привязанный чат текущего владельца. Не имитирует доставку: сетевой сбой возвращает ошибку, а не успешное уведомление.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/push/config": {
+      "get": {
+        "tags": [
+          "Web Push"
+        ],
+        "summary": "Получить конфигурацию Web Push",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "configured": {
+                      "type": "boolean"
+                    },
+                    "publicKey": {
+                      "type": "string",
+                      "description": ""
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Опциональный Web Push: возвращает configured и публичный VAPID-ключ, если функция включена на сервере. Приватный ключ не выдаётся. Текущий интерфейс использует Telegram; наличие маршрута не означает активную подписку браузера."
+      }
+    },
+    "/api/push/subscribe": {
+      "post": {
+        "tags": [
+          "Web Push"
+        ],
+        "summary": "Сохранить подписку браузера",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Опциональный канал. После явного разрешения пользователя сохраняет подписку браузера только текущему владельцу. Endpoint проверяется по списку известных push-провайдеров.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subscription": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "subscription"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/push/unsubscribe": {
+      "post": {
+        "tags": [
+          "Web Push"
+        ],
+        "summary": "Удалить подписку браузера",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Удаляет подписку браузера текущего владельца. Не отключает Telegram и не удаляет аккаунт.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "endpoint": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "endpoint"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/push/test": {
+      "post": {
+        "tags": [
+          "Web Push"
+        ],
+        "summary": "Отправить тестовое браузерное уведомление",
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка проверки запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Нет действующей сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Отправляет пробный Web Push, если сервер настроен и есть подписка браузера. Реальная доставка зависит от HTTPS, разрешения браузера и сети.",
+        "requestBody": {
+          "required": true,
+          "description": "JSON-запрос",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/register": {
+      "post": {
+        "tags": [
+          "Авторизация"
+        ],
+        "summary": "Создать постоянный аккаунт",
+        "security": [],
+        "description": "Создаёт постоянного владельца в SQLite и устанавливает HttpOnly cookie. username: 3–32 ASCII-символа, первая буква латинская, затем буквы/цифры/_. Регистр логина не учитывается; занятый логин возвращает 409. Пароль 10–128 символов хранится как PBKDF2-SHA256 с отдельной солью. Слишком частые попытки — 429.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 32,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_]{2,31}$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 10,
+                    "maxLength": 128,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные поля"
+          },
+          "409": {
+            "description": "Логин занят (регистрация)"
+          },
+          "429": {
+            "description": "Слишком много попыток"
+          }
+        }
+      }
+    },
+    "/api/login": {
+      "post": {
+        "tags": [
+          "Авторизация"
+        ],
+        "summary": "Войти по логину и паролю",
+        "security": [],
+        "description": "Проверяет логин и пароль существующего аккаунта, устанавливает HttpOnly cookie на 30 дней. Неверные данные — 401 без раскрытия наличия логина, ограничение попыток — 429. Пароль в ответе не возвращается.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 32,
+                    "pattern": "^[A-Za-z][A-Za-z0-9_]{2,31}$"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 10,
+                    "maxLength": 128,
+                    "writeOnly": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Операция выполнена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные поля"
+          },
+          "409": {
+            "description": "Логин занят (регистрация)"
+          },
+          "429": {
+            "description": "Слишком много попыток"
+          }
+        }
+      }
+    }
+  }
+}

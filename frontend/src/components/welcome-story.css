@@ -1,0 +1,32 @@
+/* The detailed pixel face keeps sign-in labels distinct at small sizes. */
+.auth-page .auth-main,
+.auth-page .auth-main :is(h1,h2,h3,p,label,input,textarea,button,a,small,strong,span) {
+  font-family: var(--font-body) !important;
+  letter-spacing: 0 !important;
+}
+.auth-page .auth-main h1 { font-weight: 650 !important; font-size: clamp(36px,4vw,56px); line-height: 1.12; }
+.auth-page .auth-main h2 { font-weight: 650 !important; font-size: 30px; line-height: 1.2; }
+.auth-page .auth-main button[data-slot='button'] { font-size: 18px; font-weight: 600; min-height: 48px; }
+.auth-page .auth-main :is(label,input,.line-tabs button) { font-size: 18px !important; }
+.auth-page .welcome-description { font-size: 17px; line-height: 1.7; }
+.auth-page .welcome-animals { display: flex; flex-wrap: wrap; gap: 28px; align-items: end; margin-top: 40px; }
+.auth-page .welcome-animals .pet-avatar { flex: 0 0 96px; }
+@media (max-width:759px) {
+  .auth-page .auth-main h1 { font-size: 34px; }
+  .auth-page .auth-main h2 { font-size: 27px; }
+  .auth-page .welcome-animals { justify-content: center; gap: 16px; margin-top: 24px; }
+}
+
+/* A single compact row keeps the sign-in form within reach on phones. */
+@media (max-width:759px) {
+  .auth-page .auth-main .welcome-story h1 { font-size: 34px; line-height: 1.15; }
+  .auth-page .auth-main .welcome-description { font-size: 18px; margin: 12px 0; }
+  .auth-page .auth-main .welcome-animals { flex-wrap: nowrap; justify-content: flex-start; gap: 8px; margin-top: 12px; }
+  .auth-page .auth-main .welcome-animals .pet-avatar { flex: 0 0 64px; width: 64px; height: 64px; }
+  .auth-page .auth-main .welcome-animals .pet-avatar :is(canvas,img) { width: 64px !important; height: 64px !important; }
+}
+
+/* Hints belong to their input, not to the form's row spacing. */
+.auth-form-section form { gap: 20px; }
+.auth-form-section .field { gap: 6px; }
+.auth-form-section .field-hint { margin: 0; font-size: 16px; line-height: 1.45; }

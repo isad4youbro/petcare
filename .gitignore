@@ -1,0 +1,26 @@
+data/
+backend/data/
+.env
+__pycache__/
+*.log
+test-results/
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.archive/
+frontend/preview/
+frontend/public/assets/pets/
+.coverage
+*.pem
+deploy/petcare.env
+*.zip
+*.sha256
+*.sqlite3*
+.ruff_cache/
+
+# One-time preparation scripts and local-only staging
+prepare_portfolio.py
+configure_portfolio.py
+refresh_docs.py
+finalize_public.py
+*.tar.gz
