@@ -72,7 +72,6 @@ export function PetWalkway({ pet }) {
     event.preventDefault()
     const m = motion.current
     Object.assign(m, { wasSleeping: m.sleeping, held: true, falling: false, sleeping: false, pickedAt: performance.now(), startX: event.clientX, startY: event.clientY, offsetX: event.clientX - m.x, offsetY: event.clientY - m.y, moved: false, pointerId: event.pointerId })
-    event.currentTarget.focus({ preventScroll: true })
     event.currentTarget.setPointerCapture(event.pointerId)
     show('held')
   }
